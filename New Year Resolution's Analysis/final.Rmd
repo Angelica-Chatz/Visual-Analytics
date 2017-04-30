@@ -1,0 +1,114 @@
+---
+title: "R Notebook"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+After fixing the structure of the json file by adding commas as prefix of every line using Sublime Text 3, we then convert it into an R data frame and keep just the success/failure variable. 
+
+```{r,include=FALSE}
+rm(list = ls(all = TRUE))
+gc(reset = TRUE)
+
+library(jsonlite)
+
+results <- fromJSON("Results.json", simplifyVector = TRUE, flatten = FALSE)
+```
+### Edw sumvainei kati periergo. Sthn arxh h results skaei. Alla ama thn xanadwsw thn entolh mesa apo thn konsola me panw velaki, tote paizei!##
+
+```{r,include=FALSE}
+results <- data.frame(matrix(unlist(results), nrow = 107667))
+results$X1 <- NULL
+names(results) <- c('success')
+```
+After opening the initial datasets with Notepad++ in order to re-encode the csv files with 'UTF-8 without BOM', we continue with some basic transformatory procedures. 
+
+loading 'Personal Information' and 'Survey' datasets and merging them into 'survey' with the 'results' dataset, after skippind 'id', 'first_name' and 'last_name' and renaming variables
+
+```{r,include=FALSE}
+library(readr)
+
+Personal_Information <- read_csv("C:/Users/SONY/Desktop/Final Project/Personal Information.csv", col_types = cols(first_name = col_skip(), id = col_skip(), last_name = col_skip()))
+
+head(Personal_Information)
+
+Survey_Questions <- read_csv("C:/Users/SONY/Desktop/Final Project/Survey Questions.csv", col_types = cols(id = col_skip()))
+
+head(Survey_Questions)
+
+survey <- cbind(Personal_Information,Survey_Questions,results)
+
+names(survey) <- c("age","gender","income","state","resolution_type","outcome_behaviour","tracking_progress","lifestyle_change","alone","money_cost","success")
+
+View(survey)
+
+rm(Personal_Information,Survey_Questions,results)
+```
+
+dropping unused factor levels, checking each variable for missing values and removing them
+
+```{r,include=FALSE}
+droplevels(survey)
+
+(mis.val.perc <- sapply(survey,function(x){sum(is.na(x))/length(x)})*100)
+
+survey <- na.omit(survey)
+
+sum(is.na(survey))
+
+survey[2:10] <- lapply(survey[2:10],factor)
+
+str(survey)
+```
+
+Checking all factor-levels, re-ordering and recoding in order to get homogeneous levels
+
+```{r,include=FALSE}
+
+levels(survey$income)
+survey$income <- factor(survey$income,levels = c("<24999","25000-49999","50000-99999","100000-249999",">250000"),ordered = TRUE)
+
+levels(survey$state)
+
+levels(survey$resolution_type)
+
+levels(survey$outcome_behaviour)
+survey$outcome_behaviour[survey$outcome_behaviour == "Out-come"] <- "Outcome"
+
+levels(survey$tracking_progress)
+
+levels(survey$lifestyle_change)
+survey$lifestyle_change[survey$lifestyle_change == "large"] <- "Large"
+
+levels(survey$alone)
+
+levels(survey$money_cost)
+```
+
+creating age groups
+
+```{r,include=FALSE}
+for (i in 1:length(survey$age)) {
+ 
+  if (survey$age[i] >= 16 & survey$age[i] <= 24) 
+                { survey$age[i] <- "16-24"}
+              else if (survey$age[i] >= 25 & survey$age[i] <= 34) 
+                { survey$age[i] <- "25-34"}      
+              else if (survey$age[i] >= 35 & survey$age[i] <= 44)
+                {survey$age[i] <- "35-44"}                                             else if ( survey$age[i] >= 45 & survey$age[i] <= 54)
+                { survey$age[i] <- "45-54"}                                            else {survey$age[i] <- "55-65"}
+}
+
+survey$age <- as.factor(survey$age)
+
+View(survey)
+
+write.csv(survey,"survey.csv",row.names = FALSE)
+```
+
+our response variable is pretty balanced
+
+```{r,include=FALSE}
+table(survey$success)
+```
