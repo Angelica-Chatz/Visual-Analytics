@@ -1,0 +1,160 @@
+---
+output: word_document
+---
+
+# MVT Dataset
+
+This dataset is about Motor Vehicle Thefts in USA.
+
+Installing packages
+
+install.packages("ggplot2")
+install.packages("maps")
+install.packages("ggmap")
+
+```{r,fig.width=4,fig.height=3}
+# Loading MVT dataset
+mvt<-read.csv("~/MVT.csv", stringsAsFactors=FALSE)
+
+# Checking data frame structure
+str(mvt)
+
+# Transforming variable Date into readable R format 
+mvt$Date<-strptime(mvt$Date, format="%m/%d/%y %H:%M")
+
+# Extracting Weekday variable from Date variable
+mvt$Weekday<-weekdays(mvt$Date)
+
+# Extracting Hour variable from Date variable
+mvt$Hour<-mvt$Date$hour
+
+# re-Checking data frame structure
+str(mvt)
+
+# Weekday frequency table
+table(mvt$Weekday)
+
+# Transforming Weekday frequency table into WeekdayCounts data-frame
+WeekdayCounts<-as.data.frame(table(mvt$Weekday))
+
+# Checking WeekdayCounts data-frame structure
+str(WeekdayCounts)
+
+# Frequency linegraph of total car robberies per day
+library(ggplot2)
+
+ggplot(WeekdayCounts,aes(x=Var1,y=Freq))+geom_line(aes(group=1))
+```
+
+As we see the days of the week are mixed and there is no chronological day order.
+
+```{r,fig.width=4,fig.height=3}
+# Transforming Var1 into ordered factor
+WeekdayCounts$Var1<-factor(WeekdayCounts$Var1,ordered=TRUE,levels=c("Δευτέρα","Τρίτη","Τετάρτη","Πέμπτη",
+                                                                    "Παρασκευή","Σάββατο","Κυριακή"))
+
+# Frequency linegraph of robberies per day with chronological order
+ggplot(WeekdayCounts,aes(x=Var1, y=Freq))+geom_line(aes(group=1))
+```
+
+As we see from both of our graphs most car robberies take place on Friday, in contrast to Sunday.
+
+```{r,fig.width=4,fig.height=3}
+# Changing both axis label name
+ggplot(WeekdayCounts,aes(x=Var1, y=Freq))+geom_line(aes(group=1))+xlab("Day of the Week")+ylab("Total Motor
+Vehicle Thefts")
+
+# Frequency table of robberries per Weekday - Hour
+table(mvt$Weekday,mvt$Hour)
+
+# Transforming Weekday-Hour frequency table into DayHourCounts dataframe
+DayHourCounts<-as.data.frame(table(mvt$Weekday, mvt$Hour))
+
+# DayHourCounts dataframe structure
+str(DayHourCounts)
+
+# Creating numerical variable Hour by transforming factor variable Var2
+DayHourCounts$Hour<-as.numeric(as.character(DayHourCounts$Var2))
+
+# Robbery linegraph per Day - Hour
+ggplot(DayHourCounts,aes(x=Hour,y=Freq))+geom_line(aes(group=Var1))
+```
+
+We can't understand much from this graph as all days are represented by the same colour.
+
+```{r,fig.width=4,fig.height=3}
+# Robbery linegraph per Day - Hour with seperate colour for each day and thicker lines
+ggplot(DayHourCounts,aes(x=Hour,y=Freq))+geom_line(aes(group=Var1,color=Var1),size=2)
+```
+
+As we see most of the car robberies take place during Sunday,Saturday,Monday midnight and Friday at around 10pm. On the other hand, there are less car robberies at around 4am to 5am every day and 5am to 7.5am during weekends. 
+
+```{r,fig.width=4,fig.height=3}
+# Same linegraph with more transparent lines
+ggplot(DayHourCounts,aes(x=Hour,y=Freq))+geom_line(aes(group=Var1,color=Var1),size=2,alpha=0.5)
+```
+
+As we see this linegraph isn't of much help.
+
+# HEAT MAPS
+
+```{r,fig.width=4,fig.height=3}
+# Var1 with ordered levels by chronological day sequence
+DayHourCounts$Var1<-factor(DayHourCounts$Var1,ordered=TRUE, 
+                            levels=c("Δευτέρα","Τρίτη","Τετάρτη","Πέμπτη","Παρασκευή","Σάββατο","Κυριακή"))
+
+# Robberies frequency heatmap per Day- Hour
+ggplot(DayHourCounts,aes(x=Hour, y=Var1))+geom_tile(aes(fill=Freq))
+```
+
+As we see most of the car robberies take place during Sunday,Saturday,Monday midnight and Friday at around 10pm. On the other hand, there are less car robberies at around 4am to 5am every day and 5am to 7.5am during weekends. 
+
+```{r,fig.width=4,fig.height=3}
+# Replacing the name of the Heatmap legend with "Total MV Thefts"
+ggplot(DayHourCounts,aes(x=Hour,y=Var1))+geom_tile(aes(fill=Freq))+scale_fill_gradient(name="Total MV Thefts")+theme(axis.title.y=element_blank())
+
+# Changing the colours of the heatmap legend. White for low frequency and red for higher.
+ggplot(DayHourCounts, aes(x = Hour, y = Var1)) + geom_tile(aes(fill = Freq))+scale_fill_gradient(name="Total MV Thefts", low="white", high="red") + theme(axis.title.y = element_blank())
+```
+
+As we see Friday night is a high risk time for car robbery
+
+# Geospatial HEAT MAPS
+```{r,fig.width=4,fig.height=3}
+# Loading Chicago map
+library(maps)
+library(ggmap)
+
+chicago<-get_map(location="chicago",zoom = 11)
+
+# View Chicago map
+ggmap(chicago)
+
+# Placing the first 100 robberies on the map of Chicago
+ggmap(chicago)+geom_point(data=mvt[1:100,],aes(x=Longitude,y=Latitude))
+
+# Creating LatLonCounts dataframe: car robbery frequency dataframe, by rounding up to 2 decimals the Longitude & Latitude variables
+LatLonCounts<-as.data.frame(table(round(mvt$Longitude,2),round(mvt$Latitude,2)))
+
+# LatLonCounts dataframe structure
+str(LatLonCounts)
+
+# Renaming Var1 & Var2 into Long & Lat respectively & turning them into numerical variables
+LatLonCounts$Long<-as.numeric(as.character(LatLonCounts$Var1))
+LatLonCounts$Lat<-as.numeric(as.character(LatLonCounts$Var2))
+
+# Chicago car robbery map with size and colour of points depending on the frequency of robberies
+ggmap(chicago)+geom_point(data= LatLonCounts,aes(x=Long,y=Lat,color=Freq,size=Freq))
+```
+
+Brighter and Bigger dotpoints on map represent higher car robbery frequency.
+
+```{r,fig.width=4,fig.height=3}
+# Setting yellow colour for low frequency and red colour for high
+ggmap(chicago)+geom_point(data=LatLonCounts,aes(x=Long,y=Lat,color=Freq,size=Freq))+
+  scale_colour_gradient(low="yellow",high="red")
+
+# Using the argument geom_tile so as to create a more typical heatmap
+ggmap(chicago)+geom_tile(data=LatLonCounts,aes(x=Long,y=Lat,alpha=Freq),fill="red")
+```
+

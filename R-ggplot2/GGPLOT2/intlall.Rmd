@@ -1,0 +1,105 @@
+---
+output: word_document
+---
+
+#Intlall Dataset
+
+This dataset is about MIT international students and where they come from.
+
+# Geospatial HEATMAPS
+
+Installing packages
+
+install.packages("ggplot2")
+install.packages("ggmap")
+
+```{r,fig.width=4,fig.height=3}
+# Loading libraries
+library(ggplot2)
+library(ggmap)
+
+# Loading Intlall dataframe
+intlall<-read.csv("~/intlall.csv",stringsAsFactors=FALSE)
+
+# Checking the first 6 rows of intlall dataframe
+head(intlall)
+
+# Replacing NAs with 0
+intlall[is.na(intlall)]<-0
+
+# re-Checking the first 6 rows of the dataframe
+head(intlall)
+
+# Loading world-map dataframe
+world_map<-map_data("world")
+
+# Checking world-map structure
+str(world_map)
+
+# Merging intlall into world_map dataframe
+world_map<-merge(world_map,intlall,by.x ="region",by.y="Citizenship")
+
+# re-Checking world_map structure
+str(world_map)
+
+# Creating world_map map
+ggplot(world_map,aes(x=long,y=lat,group=group))+geom_polygon(fill="white",color="black")+
+  coord_map("mercator")
+```
+
+This is a wrong world map graph with no meaning due to wrong re-arrangement of observations,
+which happened because of the merging of the two dataframes.
+
+```{r,fig.width=4,fig.height=3}
+# Re-ordering observations correctly
+world_map<-world_map[order(world_map$group,world_map$order),]
+
+# Re-constructing world_map map
+ggplot(world_map,aes(x=long,y=lat,group=group))+geom_polygon(fill="white",color="black")+
+  coord_map("mercator")
+```
+
+As we see there a few missing countries (ie.countries of Africa)
+This happens because they have different name in our two initial dataframes.
+
+```{r,fig.width=4,fig.height=3}
+# Constructing a student frequency table per country from the intlall dataframe to check which countries
+# have different names from the world_map dataframe
+table(intlall$Citizenship) 
+```
+
+As we see China has a different name in our two datasets.
+
+```{r,fig.width=4,fig.height=3}
+# Re-naming intlall's "China(People's Republic of)" into "China" to match with world_map dataframe
+intlall$Citizenship[intlall$Citizenship=="China(People's Republic Of)"]<-"China"
+
+# Re-checking intlall's country names
+table(intlall$Citizenship)
+
+# Re-merging both dataframes
+world_map<-merge(map_data("world"),intlall,by.x="region",by.y="Citizenship")
+
+# Re-ordering observations correctly
+world_map<-world_map[order(world_map$group,world_map$order),]
+
+# re-Building map
+ggplot(world_map,aes(x=long,y=lat,group=group))+geom_polygon(fill="white",color="black")+
+  coord_map("mercator")
+
+# Re-building world_map map by filling it with the number of total students per country
+ggplot(world_map,aes(x=long,y=lat,group=group))+geom_polygon(aes(fill=Total),color="black")+
+  coord_map("mercator")
+```
+
+As we see more students come from America and India.
+
+```{r,,fig.width=4,fig.height=3}
+# re-building world_map map by using "orthographic" view
+ggplot(world_map,aes(x=long,y=lat,group=group))+geom_polygon(aes(fill=Total),color="black")+
+  coord_map("ortho",orientation=c(20, 30, 0))
+
+# View of world-map from another side
+ggplot(world_map,aes(x=long,y=lat,group=group))+geom_polygon(aes(fill=Total),color="black")+
+  coord_map("ortho", orientation=c(-37, 175, 0))
+```

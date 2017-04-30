@@ -1,0 +1,114 @@
+---
+title: " Part -B- "
+output: word_document
+---
+
+# WHO Dataset
+
+This dataset is about world population and several indexes.
+
+Installing packages
+
+install.packages("ggplot2")
+
+```{r,fig.width=4,fig.height=3}
+# Removing exponential notation
+options(scipen=999)
+
+# Loading WHO dataset
+WHO<-read.csv("~/WHO.csv")
+
+# Checking data frame structure
+str(WHO)
+
+# Scatterplot GNI-Fertility Rate
+plot(WHO$GNI,WHO$FertilityRate)
+```
+
+We observe that higher fertility rates are related to low income.
+
+```{r,fig.width=4,fig.height=3}
+# Plot GNI-Fertility Rate with points
+library(ggplot2)
+
+scatterplot<-ggplot(WHO,aes(GNI,FertilityRate))
+scatterplot+geom_point()
+
+# Plot GNI-Fertility Rate with line
+scatterplot+geom_line()
+
+# Changing colour, size & shape
+scatterplot+geom_point(color="blue",shape=17,size=3)
+scatterplot+geom_point(color="darkred",shape=8,size=3)
+
+# Adding title
+scatterplot+geom_point(color="blue",shape=17,size=3)+ggtitle("Fertility Rate vs Gross National Income")
+
+# Save plot as variable
+FertilityGNIplot<-scatterplot+geom_point(color="blue",shape=17,size=3)+ggtitle("Fertility Rate vs Gross National Income")
+
+# Export plot to PDF
+pdf("FertilityGNIplot.pdf")
+print(FertilityGNIplot)
+dev.off()
+
+# Export plot to SVG
+svg("FertilityGNIplot.svg")
+print(FertilityGNIplot)
+dev.off()
+
+# Plot with dark red colour, stars & title
+scatterplot+geom_point(color="darkred",shape=8,size=3)+ggtitle("Fertility Rate vs. Gross National Income")
+
+# Plot which shows the correlation of GNI-Fertility Rate per Region
+ggplot(WHO,aes(x=GNI,y=FertilityRate,color=Region))+geom_point()
+```
+
+As we see mostly in Africa we find low income correlation and high fertility rate.
+
+```{r,fig.width=4,fig.height=3}
+# Plot which shows the correlation of GNI-Fertility Rate per Life Expectancy
+ggplot(WHO,aes(x=GNI,y=FertilityRate,color=LifeExpectancy))+geom_point()
+```
+
+As we see people who have more children and low income tend to live less than people with less children and higher income.
+
+```{r,fig.width=4,fig.height=3}
+# Correlation Plot Fertility Rate - Under 15
+ggplot(WHO,aes(x=FertilityRate,y=Under15))+geom_point()
+```
+
+As we see our plot approaches more the pattern of a logistic regression line.
+This happens because the rate of increase of Under15 variable is smaller than the one of Fertility Rate variable.
+
+```{r,fig.width=4,fig.height=3}
+# Correlation Plot log(Fertility Rate) - Under 15 in order to make our line more linear
+ggplot(WHO,aes(x=log(FertilityRate),y=Under15))+geom_point()
+
+
+# Constructing mod: linear regression model
+mod<-lm(Under15~log(FertilityRate),data = WHO)
+```
+
+As we see our model consists of the predicted variable Under15 and the independent variable Fertility Rate (predictor).
+
+```{r}
+# Model summary
+summary(mod)
+```
+
+As we see R-squared=0.9391 which means that our predictor variable is of high statistical significance.
+
+```{r,fig.width=4,fig.height=3}
+# Log(Fertility Rate) - Under 15 Plot with linear regression line
+ggplot(WHO,aes(x=log(FertilityRate),y=Under15))+geom_point()+stat_smooth(method = "lm")
+
+# Log(Fertility Rate) - Under 15 Plot with linear regression line and 99% confidence interval
+ggplot(WHO,aes(x=log(FertilityRate),y=Under15))+geom_point()+stat_smooth(method = "lm", level = 0.99)
+
+# Correlation Plot log(Fertility Rate) - Under 15 with linear regression line and NO confidence interval
+ggplot(WHO,aes(x=log(FertilityRate),y=Under15))+geom_point()+stat_smooth(method = "lm", se=FALSE)
+
+# Correlation Plot log(Fertility Rate) - Under 15 with orange linear regression line
+ggplot(WHO,aes(x=log(FertilityRate),y=Under15))+geom_point()+stat_smooth(method = "lm", colour="orange")
+```

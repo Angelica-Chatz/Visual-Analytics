@@ -1,0 +1,112 @@
+---
+output: word_document
+---
+## PART -A-
+
+# Parole Dataset
+
+This dataset is about crime rating in USA.
+
+Installing packages
+
+install.packages("MASS")
+install.packages("ggplot2")
+
+```{r}
+# Loading parole dataset
+parole<-read.csv("~/parole.csv", stringsAsFactors=FALSE)
+
+# Setting as factor the variables: male, state & crime
+parole$male<-as.factor(parole$male)
+parole$state<-as.factor(parole$state)
+parole$crime<-as.factor(parole$crime)
+
+# Question 1.1 - Count fraction
+library(MASS)
+fraction<-fractions(nrow(subset(parole,male==0 & violator==1,select=c(male)))/nrow(subset(parole,violator==1,select=c(male))))
+fraction
+```
+
+Answer: **7/39**
+
+```{r}
+# Question 1.2 - Most frequent crime in the state of Kentucky
+a<-table(parole$crime[parole$state == 2])
+names(a) = c("other", "larceny", "drug", "driving")
+names(which.max(a))
+```
+
+Answer: **b**
+
+```{r,fig.width=4,fig.height=3}  
+# Question 2.1 - Most frequent age of delinquency
+library(ggplot2)
+ggplot(data=parole, aes(x=age))+geom_histogram(binwidth=5)
+```
+
+Answer: **a**
+
+```{r,fig.width=4,fig.height=3}  
+# Question 2.2 - Blue colour
+ggplot(data=parole, aes(x=age))+geom_histogram(binwidth=5,color="blue")
+```
+
+Answer: **c**
+
+```{r,fig.width=4,fig.height=3}  
+# Question 3.1 - Age with most female parolees
+ggplot(data=parole, aes(x=age))+geom_histogram(binwidth=5) + facet_grid(male~.)
+```
+
+Answer: **d**
+
+```{r,fig.width=4,fig.height=3}  
+# Question 3.2 - facet_grid(.~male)
+ggplot(data=parole, aes(x=age))+geom_histogram(binwidth=5)+facet_grid(.~male)
+```
+
+Answer: **b**
+
+```{r,fig.width=4,fig.height=3}  
+# Question 3.3 - Histogram colour for female parolees
+ggplot(data=parole,aes(x=age,fill=male))+geom_histogram(binwidth=5)
+```
+
+Answer: **b**
+
+```{r,fig.width=4,fig.height=3}  
+# Question 3.4 - Adding transparency and overlaying the two histograms
+ggplot(data=parole, aes(x=age,fill=male))+geom_histogram(binwidth=5,position="identity",alpha=0.5)
+```
+
+Answer: **a**,**i**,**k**
+
+```{r,fig.width=4,fig.height=3}  
+# Question 4.1 - Most common length of time served
+ggplot(data=parole,aes(x=time.served))+geom_histogram(binwidth=1)
+```
+
+Answer: **c**
+
+```{r,fig.width=4,fig.height=3}  
+# Question 4.2 - (binwidth=0.1)
+ggplot(data=parole,aes(x=time.served))+geom_histogram(binwidth=0.1)
+```
+
+Answer: **b**
+
+```{r,fig.width=4,fig.height=3}  
+# Question 4.3 - Histogram for time served concerning each crime seperately
+levels(parole$crime) = c("other", "larceny", "drugs", "driving")
+ggplot(data=parole, aes(x=time.served))+geom_histogram(binwidth=1)+facet_grid(crime~.)
+```
+
+Answer 4.3a: **c**
+Answer 4.3a: **b**
+
+```{r,fig.width=4,fig.height=3}
+# Question 4.4 - Overlaying the 4 crime histograms
+ggplot(data=parole, aes(x=time.served,fill=crime))+geom_histogram(binwidth=1,position ="identity",alpha=0.5)
+```
+
+Answer: **a**

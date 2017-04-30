@@ -1,0 +1,78 @@
+---
+output: word_document
+---
+
+# Murders Dataset
+
+This dataset is taken from FBI databases and it's about murders that took place in every state of USA.
+
+# Geospatial HEATMAPS
+
+Installing packages
+
+install.packages("maps")
+install.packages("ggmap")
+
+
+```{r,fig.width=4,fig.height=3}
+# Load murders dataset
+murders <- read.csv("~/murders.csv")
+
+# Checking dataset structure
+str(murders)
+
+# Creating USA dataset
+library(maps)
+library(ggmap)
+
+statesMap<-map_data("state")
+
+# Checking USA dataset
+str(statesMap)
+
+# Creating USA map
+ggplot(statesMap,aes(x=long,y=lat,group=group))+geom_polygon(fill="white",color="black")+
+  coord_map("mercator")
+
+# Adding variable region to murder dataframe so as to merge it with statesMap dataframe
+murders$region<-tolower(murders$State)
+
+# Merging by common variable region the two datasets: murders & statesMap 
+murderMap<-merge(statesMap,murders,by="region")
+
+# Checking murderMap
+str(murderMap)
+
+# USA heatmap with Murders frequency per state
+ggplot(murderMap,aes(x=long,y=lat,group=group,fill=Murders))+geom_polygon(colour="black")+
+  scale_fill_gradient(low="black",high="red",guide = "legend")
+```
+
+As we see in the map, most murders take place in California and Texas.
+
+```{r,fig.width=4,fig.height=3}
+# USA heatmap per state population
+ggplot(murderMap, aes(x = long, y = lat, group = group, fill = Population)) + geom_polygon(colour = "black") +scale_fill_gradient(low = "black", high = "red", guide = "legend")
+```
+
+The murder and population heatmaps are almost similar. California and Texas are the most populated states.
+That's why we will create a heatmap representing the murder rate per population, instead of just the number of murders.
+```{r,fig.width=4,fig.height=3}
+# Creating variable MurderRate
+murderMap$MurderRate<-murderMap$Murders/murderMap$Population*100000
+
+# ggplot for USA map with MurderRate frequency per region
+ggplot(murderMap,aes(x=long,y=lat,group=group,fill=MurderRate))+geom_polygon(colour="black")+
+  scale_fill_gradient(low="black",high="red",guide = "legend")
+```
+
+Our heatmap shows low murder-rate in every state but this is wrong as Washington DC is an outlier with an extremely high murder rate.
+That's why we will create a heatmap which contains the states with murder rate =< 10.
+
+```{r,fig.width=4,fig.height=3}
+# ggplot for USA map with MurderRate>10 frequency per region
+ggplot(murderMap,aes(x=long,y=lat,group=group,fill=MurderRate))+geom_polygon(colour="black")+
+  scale_fill_gradient(low="black",high="red",guide = "legend",name="Murder Rate per 100k",limits=c(0.9,10))
+```
+
+Councluding, Lousiana state has the highest murder rate.
