@@ -15,7 +15,7 @@ library(jsonlite)
 
 results <- fromJSON("Results.json", simplifyVector = TRUE, flatten = FALSE)
 ```
-### Edw sumvainei kati periergo. Sthn arxh h results skaei. Alla ama thn xanadwsw thn entolh mesa apo thn konsola me panw velaki, tote paizei!##
+### Here sth weird is happening!!! Initially results variable doesn't work. BUT when I re-run it by re-entering it through the console IT WORKS!!! ##
 
 ```{r,include=FALSE}
 results <- data.frame(matrix(unlist(results), nrow = 107667))
